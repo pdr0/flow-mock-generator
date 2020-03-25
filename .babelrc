@@ -1,0 +1,17 @@
+{
+  "env": {
+    "development": {
+      "plugins": [["flow-runtime", {
+        "assert": false,
+        "annotate": false
+      }]]
+    },
+    "test": {
+      "plugins": [["flow-runtime", {
+        "assert": false,
+        "annotate": false
+      }]]
+    }
+  }
+}
+

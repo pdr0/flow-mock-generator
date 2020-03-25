@@ -1,0 +1,22 @@
+{
+  "name": "flow-mock-generator",
+  "version": "1.0.0",
+  "description": "Tool for generating mock objects based on flow types",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pdr0/flow-mock-generator.git"
+  },
+  "author": "Pedro Selas",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/pdr0/flow-mock-generator/issues"
+  },
+  "homepage": "https://github.com/pdr0/flow-mock-generator#readme",
+  "devDependencies": {
+    "flow-runtime": "0.17.0"
+  }
+}
