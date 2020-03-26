@@ -1,6 +1,6 @@
 {
   "name": "flow-mock-generator",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Tool for generating mock objects based on flow types",
   "main": "index.js",
   "scripts": {
