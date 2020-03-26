@@ -1,6 +1,6 @@
 {
   "name": "flow-mock-generator",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Tool for generating mock objects based on flow types",
   "main": "index.js",
   "scripts": {
@@ -17,6 +17,8 @@
   },
   "homepage": "https://github.com/pdr0/flow-mock-generator#readme",
   "devDependencies": {
-    "flow-runtime": "0.17.0"
+    "flow-runtime": "0.17.0",
+    "@babel/plugin-proposal-export-default-from": "^7.8.3",
+    "@babel/core": "^7.0.0"
   }
 }
