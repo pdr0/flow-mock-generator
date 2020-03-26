@@ -1,13 +1,18 @@
+// @flow
 // @flow-runtime enable
 
-// Trying to understand $Reify -> https://github.com/gcanti/babel-plugin-tcomb/issues/72
+import { reify } from 'flow-runtime'
+import type Type from 'flow-runtime'
 
-import { reify } from 'flow-runtime';
-import type Type from 'flow-runtime';
+export type FactoryType = {
+    type: *,
+    valueOverridesMap?: Object,
+    typeDefaultsOverridesMap?: Object,
+}
 
-let valueOverrides = {};
+let valueOverrides = {}
 
-let typedDefaultOverrides = {};
+let typedDefaultOverrides = {}
 
 export const typeDefaultsMap = {
     StringType: 'string_value',
@@ -16,12 +21,12 @@ export const typeDefaultsMap = {
     VoidType: null,
     NullableType: undefined,
     ExistentialType: {},
-    FunctionType: () => {
-    },
+    FunctionType: () => {},
     DateType: new Date(),
     $PropertyType: '$PropertyType',
-};
+}
 
+// 'Primitive' types. These match to types in flow-runtime
 const primitiveTypes = [
     'StringType',
     'NumberType',
@@ -32,14 +37,14 @@ const primitiveTypes = [
     'NullableType',
     'DateType',
     '$PropertyType',
-];
+]
 
-const generatorMapping = {};
+const generatorMapping = {}
 
-const buildMockObject = (type, overrideTypeName) => {
-    const typeName = overrideTypeName || (reify: Type<type>).typeName;
+const buildMockObject = (type: Type, overrideTypeName?: string): Object => {
+    const typeName: string = overrideTypeName || (reify: Type<type>).typeName
 
-    const generator = generatorMapping[typeName];
+    const generator = generatorMapping[typeName]
 
     if (!generator) {
         throw new Error(
@@ -47,64 +52,74 @@ const buildMockObject = (type, overrideTypeName) => {
         )
     }
 
-    return generator(type);
-};
+    return generator(type)
+}
 
-const generateObjectProperty = (type): Object => {
-    let value;
+/**
+ * Creates a mock object based on the provided Type. If we have an override for the requested type then use that
+ * instead. If the override is a function then execute it and use that as the value.
+ */
+const generateObjectProperty = (type: Type): Object => {
+    let value
 
     if (Object.keys(valueOverrides).includes(type.key)) {
-        const override = valueOverrides[type.key];
-        value = typeof override === 'function' ? override() : override;
+        const override = valueOverrides[type.key]
+        value = typeof override === 'function' ? override() : override
     } else {
-        value = buildMockObject(type.value);
+        value = buildMockObject(type.value)
     }
 
     return {
         [type.key]: value,
-    };
-};
+    }
+}
+
+const generateObjectType = (type: Type) => {
+    const props = type.properties.map((objectType: Type) => buildMockObject(objectType))
+    const obj = {}
+    props.map((mock: Object) => Object.assign(obj, mock))
+    return obj
+}
 
 
-const generateObjectType = (type) => {
-    const props = type.properties.map((objectType) => buildMockObject(objectType));
-    const obj = {};
-    props.map((mock) => Object.assign(obj, mock));
-    return obj;
-};
-
-const generateValue = (type): * =>
+const generateValue = (type: Type): * =>
     Object.keys(typedDefaultOverrides).includes(type.typeName)
         ? typedDefaultOverrides[type.typeName]
         : typeDefaultsMap[type.typeName]
 
-// Populate generator mapping
-primitiveTypes.forEach((primitiveType) => {
-    generatorMapping[primitiveType] = generateValue;
-});
 
-// Type definitions according flow types
-generatorMapping.TypeAlias = (type) => buildMockObject(type.type);
-generatorMapping.ObjectType = (type) => generateObjectType(type);
-generatorMapping.ObjectTypeProperty = (type) => generateObjectProperty(type);
-generatorMapping.ArrayType = (type) => [buildMockObject(type.elementType)];
+primitiveTypes.forEach((primitiveType: string) => {
+    generatorMapping[primitiveType] = generateValue
+})
 
-// Exotic types
-generatorMapping.UnionType = (type) => type.types[0].value;
-generatorMapping.TypeTDZ = (type) => buildMockObject(type.reveal());
-generatorMapping.ParameterizedTypeAlias = () => ({});
-generatorMapping.TypeParameterApplication = (type) => buildMockObject(type, type.parent.name);
-generatorMapping.$ReadOnlyArray = (type) => [buildMockObject(type.typeInstances[0])];
-generatorMapping.$KeysType = (type) => type.unwrap().types[0].value;
-// You can add more exotic types here ...
+generatorMapping.TypeAlias = (type: Type) => buildMockObject(type.type)
+generatorMapping.ObjectType = (type: Type) => generateObjectType(type)
+generatorMapping.ObjectTypeProperty = (type: Type) => generateObjectProperty(type)
+generatorMapping.ArrayType = (type: Type) => [buildMockObject(type.elementType)]
+generatorMapping.UnionType = (type: Type) => type.types[0].value
+generatorMapping.TypeTDZ = (type: Type) => buildMockObject(type.reveal())
+generatorMapping.ParameterizedTypeAlias = () => ({}) // Not sure how to handle this
 
-export const generateMockObject = ({type, valueOverridesMap = {}, typeDefaultsOverridesMap = {}}) => {
+generatorMapping.TypeParameterApplication = (type: Type) => buildMockObject(type, type.parent.name)
+generatorMapping.$ReadOnlyArray = (type: Type) => [buildMockObject(type.typeInstances[0])]
+generatorMapping.$KeysType = (type: Type) => type.unwrap().types[0].value
+
+// Add more exotics types here ...
+
+/**
+ * Create a mock object for the requested type. Values within the object will be set on defaults for the Type
+ * of each Object property. These default values can be overriden by providing a defaultsMap as an argument.
+ * You can also provide an optional overrides map that can be used to override a specific field when the object
+ * is created, this can be a fixed value or a function that gets executed when the mock is created.
+ */
+export const generateMockObject = ({type, valueOverridesMap = {}, typeDefaultsOverridesMap = {},}: FactoryType = {}): Object => {
     if (!type) {
-        throw new Error('Must provide a type');
+        throw new Error('Must provide a type')
     }
 
-    valueOverrides = valueOverridesMap;
-    typedDefaultOverrides = typeDefaultsOverridesMap;
+    // Set overrides and defaults
+    valueOverrides = valueOverridesMap
+    typedDefaultOverrides = typeDefaultsOverridesMap
 
-    return buildMockObject(type);
-};
+    return buildMockObject(type)
+}
