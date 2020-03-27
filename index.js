@@ -26,7 +26,6 @@ export const typeDefaultsMap = {
     $PropertyType: '$PropertyType',
 }
 
-// 'Primitive' types. These match to types in flow-runtime
 const primitiveTypes = [
     'StringType',
     'NumberType',
@@ -55,10 +54,7 @@ const buildMockObject = (type: Type, overrideTypeName?: string): Object => {
     return generator(type)
 }
 
-/**
- * Creates a mock object based on the provided Type. If we have an override for the requested type then use that
- * instead. If the override is a function then execute it and use that as the value.
- */
+
 const generateObjectProperty = (type: Type): Object => {
     let value
 
@@ -106,12 +102,6 @@ generatorMapping.$KeysType = (type: Type) => type.unwrap().types[0].value
 
 // Add more exotics types here ...
 
-/**
- * Create a mock object for the requested type. Values within the object will be set on defaults for the Type
- * of each Object property. These default values can be overriden by providing a defaultsMap as an argument.
- * You can also provide an optional overrides map that can be used to override a specific field when the object
- * is created, this can be a fixed value or a function that gets executed when the mock is created.
- */
 export const generateMockObject = ({type, valueOverridesMap = {}, typeDefaultsOverridesMap = {},}: FactoryType = {}): Object => {
     if (!type) {
         throw new Error('Must provide a type')
